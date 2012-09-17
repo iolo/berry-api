@@ -1,0 +1,6 @@
+pre.beautifyjson { }
+.beautifyjson .string { color: green; }
+.beautifyjson .number { color: darkorange; }
+.beautifyjson .boolean { color: blue; }
+.beautifyjson .null { color: magenta; }
+.beautifyjson .key { color: red; }

@@ -1,0 +1,3 @@
+[submodule "imin-thrift"]
+	path = imin-thrift
+	url = git@github.com:kthcorp/imin-thrift.git

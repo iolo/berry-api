@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+  <meta charset="utf8" />
+  <title>NoReMong::console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.0/css/bootstrap-combined.min.css" />
+  <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.0/css/bootstrap-responsive.min.css" />
+  <link rel="stylesheet" href="/assets/css/beautifyjson.css" />
+  <style>
+    body {
+      padding-top: 60px;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <a class="brand" href="#">NoReMong::console</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!--
+    <div class="row">
+      <div class="span1">1</div>
+      <div class="span1">2</div>
+      <div class="span1">3</div>
+      <div class="span1">4</div>
+      <div class="span1">5</div>
+      <div class="span1">6</div>
+      <div class="span1">7</div>
+      <div class="span1">8</div>
+      <div class="span1">9</div>
+      <div class="span1">10</div>
+      <div class="span1">11</div>
+      <div class="span1">12</div>
+    </div>
+    -->
+    <div class="row">
+      <div class="span3">
+        <label>Resources</label>
+        <div id="resourcesPlaceholder" class="row"></div>
+      </div>
+      <div class="span9">
+        <div class="row">
+          <div class="span2">
+            <select id="methodSelect" style="width:100%;">
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PUT">PUT</option>
+              <option value="DELETE">DELETE</option>
+            </select>
+          </div>
+          <div class="span6">
+            <input id="urlText" type="text" value="" placeholder="http://api.im-in.com/api/v1/" style="width:100%;"/>
+          </div>
+          <div class="span1">
+            <button id="goBtn" class="btn btn-primary" style="width:100%;">Go!</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="span9">
+            <ul class="nav nav-tabs">
+              <li id="requestTab" class="active"><a href="#requestPane" data-toggle="tab">Request</a></li>
+              <li id="responseTab"><a href="#responsePane" data-toggle="tab">Response</a></li>
+            </ul>
+            <div class="tab-content">
+              <div id="requestPane" class="tab-pane active">
+                <button class="btn btn-link" data-toggle="collapse" data-target="#requestParamsPane"><i class="icon-chevron-down"></i>Parameters</button>
+                <div id="requestParamsPane" class="collapse in">
+                  <div id="requestParamsPlaceholder"></div>
+                </div>
+
+                <button class="btn btn-link" data-toggle="collapse" data-target="#requestHeadersPane"><i class="icon-chevron-down"></i>Headers</button>
+                <div id="requestHeadersPane" class="collapse in">
+                  <div id="requestHeadersPlaceholder"></div>
+                </div>
+              </div>
+              <div id="responsePane" class="tab-pane">
+                <button class="btn btn-link" data-toggle="collapse" data-target="#responseStatusPane"><i class="icon-chevron-down"></i>Status</button>
+                <div id="responseStatusPane" class="collapse in">
+                  <pre id="responseStatusPlaceholder"></pre>
+                </div>
+
+                <button class="btn btn-link" data-toggle="collapse" data-target="#responseBodyPane"><i class="icon-chevron-down"></i>Body</button>
+                <div id="responseBodyPane" class="collapse in">
+                  <pre id="responseBodyPlaceholder" class="beautifyjson"></pre>
+                </div>
+
+                <button class="btn btn-link" data-toggle="collapse" data-target="#responseHeadersPane"><i class="icon-chevron-down"></i>Headers</button>
+                <div id="responseHeadersPane" class="collapse in">
+                  <pre id="responseHeadersPlaceholder" class="beautifyjson"></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!--container-->
+
+  <script id="resourcesTemplate" type="application/x-ejs">
+    <ul id="resourcesList" class="nav nav-list">
+      <% _.each(model, function (resource, index) { %>
+      <% if (resource.path) { %>
+      <li class="resourceItem" data-id="<%=index%>"><a href="#"><%=resource.label%></a></li>
+      <% } else { %>
+      <li class="nav-header"><%=resource.label%></li>
+      <% } %>
+      <% }); %>
+    </ul>
+  </script>
+
+  <script id="paramsTemplate" type="application/x-ejs">
+    <% _.each(model, function (v, k) { %>
+    <div class="row">
+      <input class="paramName span2" type="text" value="<%=k%>" placeholder="key" />
+      <input class="paramValue span5" type="text" value="<%=v%>" placeholder="value" />
+      <button class="addParamBtn btn btn-link span1"><i class="icon-plus-sign"></i></button>
+      <button class="removeParamBtn btn btn-link span1"><i class="icon-remove-sign"></i></button>
+    </div>
+    <% }); %>
+    <div class="row">
+      <input class="paramName span2" type="text" value="" placeholder="key" />
+      <input class="paramValue span5" type="text" value="" placeholder="value" />
+      <button class="addParamBtn btn btn-link span1"><i class="icon-plus-sign"></i></button>
+      <button class="removeParamBtn btn btn-link span1"><i class="icon-remove-sign"></i></button>
+    </div>
+  </script>
+
+  <script src="http://code.jquery.com/jquery-1.8.1.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.3.3/underscore-min.js"></script>
+  <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.0/js/bootstrap.min.js"></script>
+  <script src="/assets/js/beautifyjson.js"></script>
+  <script src="/assets/js/prettyprint.js"></script>
+  <script>
+//var RESOURCE_BASE = 'http://api.im-in.com:9080/api/v1/';
+//var RESOURCE_BASE = 'http://dev.im-in.com:9080/api/v1/';
+var RESOURCE_BASE = 'http://localhost:8080/api/v1/';
+
+var RESOURCES = [
+  //
+  { label:'auth' },
+  { label:'signin', path:'users/signin', method:'POST',  params:{ user_id:'a@b.c', password:'123123', env:'pc', udid:'', os:'', terminal:'' } },
+  { label:'signout', path:'users/signout', method:'DELETE',  params:{ imintoken:'', env:'pc', udid:'', os:'', terminal:'' } },
+  { label:'signup', path:'users/signup', method:'POST',  params:{ email:'', user_id:'', password:'', env:'pc', udid:'', os:'', terminal:'' } },
+  { label:'signdown', path:'users/signdown', method:'DELETE',  params:{ imintoken:'', env:'pc', udid:'', os:'', terminal:'' } },
+  //
+  { label:'activity' },
+  { label:'user activities', path:'views/activities', method:'GET',  params:{ before_at:'', after_at:'', limit:12 }, headers:{ imintoken:'' } },
+  { label:'friends activities', path:'views/activities/friends', method:'GET',  params:{ before_at:'', after_at:'', limit:12 }, headers:{ imintoken:'' } },
+  //
+  { label:'users' },
+  { label:'get user profile', path:'users/profile', method:'GET', params:{ target_id:'' }, headers: { imintoken:'' } },
+  { label:'update user profile', path:'users/profile', method:'POST', params:{ target_id:'', name:'', phonenumber:'', birthday:'', bio:'', pictures:[], covers:[], is_open:0 }, headers: { imintoken:'' } },
+  { label:'bookmarked places', path:'users/bookmarks', method:'GET', params:{ }, headers: { imintoken:'' } },
+  { label:'user search', path:'users/search', method:'GET', params:{ query:'imin', option:'email|use_id|name' }, headers:{ imintoken:'' } },
+  //
+  { label:'friends' },
+  { label:'request friend', path:'friends/{{groupId}}/{{userId}}', method:'POST', params:{}, headers:{ imintoken:'' } },
+  { label:'grant friend', path:'friends/{{groupId}}/{{userId}}', method:'PUT', params:{}, headers:{ imintoken:'' } },
+  { label:'revoke/cancel/delete friend', path:'friends/{{groupId}}/{{userId}}', method:'DELETE', params:{}, headers:{ imintoken:'' } },
+  { label:'friend detail', path:'friends/{{groupId}}/{{mode}}/{{userId}}', method:'GET', params:{ offset:0, limit:10 }, headers:{ imintoken:'' } },
+  { label:'friend list', path:'friends/{{groupId}}/{{mode}}/{{userId}}', method:'GET', params:{ offset:0, limit:10 }, headers:{ imintoken:'' } },
+  { label:'all friend list', path:'friends/{{groupId}}/{{userId}}', method:'GET', params:{ offset:0, limit:10 }, headers:{ imintoken:'' } },
+  //
+  { label:'post' },
+  { label:'nearby timeline', path:'views/timelines/{{postId}}', method:'GET', params:{ lon:126.923369, lat:37.492552, radius:2, category_key:7000000, after_at:'2012-06-11T07:13:53.089Z', before_at:'2012-06-11T12:13:53.089Z', limit:12 }, headers:{ imintoken:'' } },
+  { label:'begin new post', path:'posts/new', method:'GET', params:{}, headers:{ imintoken:'' } },
+  { label:'commit new post', path:'posts/{{postId}}', method:'GET', params:{ text:'', attachments: [], is_open:0, place_id:'', title:'', address:'', category_key:7001008, category_title:'공원', location:[126.923369, 37.492552], mentions:[], tags:[], types:'p' }, headers:{ imintoken:'' } },
+  { label:'update post', path:'posts/{{postId}}', method:'PUT', params:{ text:'', attachments: [], is_open:0, place_id:'', title:'', address:'', category_key:7001008, category_title:'공원', location:[126.923369, 37.492552], mentions:[], tags:[], types:'p' }, headers:{ imintoken:'' } },
+  { label:'delete post', path:'posts/{{postId}}', method:'DELETE', params:{}, headers:{ imintoken:'' } },
+  { label:'post details', path:'views/posts/{{postId}}', method:'GET', params:{ offset:0, limit:5 }, headers:{ imintoken:'' } },
+  { label:'abuse', path:'report', method:'POST', params:{ reason:'욕설', target_type:'post', target_id:'' }, headers:{ imintoken:'' } },
+  { label:'like' },
+  { label:'comment' },
+  { label:'abuse', path:'report', method:'POST', params:{ reason:'욕설', target_type:'comment', target_id:'' }, headers:{ imintoken:'' } },
+  //
+  { label:'place' },
+  { label:'get recommend place', path:'places/new', method:'GET', params:{ lon:126.923369, lat:37.492552 }, headers:{ imintoken:'' } },
+  { label:'get recommend places list', path:'places/recommend', method:'GET', params:{ lon:126.923369, lat:37.492552, option:'all|recommend|visited', query:'', offset:0, limit:25 }, headers:{ imintoken:'' } },
+  { label:'add new placs', path:'places', method:'POST', params:{ title:'마음속', category_key:9000000, category_title:'기타', location:[126.923569, 37.492652], address:'안드로메다', phonenumber:'02-892-6565' }, headers:{ imintoken:'' } },
+  { label:'check duplicated', path:'places/checkDuplication', method:'GET', params:{ lon:126.923369, lat:37.492552, radius:2, title:'장소10' }, headers:{ imintoken:'' } },
+  { label:'get place detail', path:'places/{{placeId}}', method:'GET', params:{ limit:3 }, headers:{ imintoken:'' } },
+  { label:'get posts of place', path:'places/{{placeId}}/posts', method:'GET', params:{ before_at:'2012-06-27T04:59:24.161Z', after_at:'2012-06-27T04:59:24.161Z', limit:3 }, headers:{ imintoken:'' } },
+  { label:'set bookmark', path:'places/{{placeId}}/bookmark', method:'POST', params:{}, headers:{ imintoken:'' } },
+  { label:'remove bookmark', path:'places/{{placeId}}/bookmark', method:'DELETE', params:{}, headers:{ imintoken:'' } },
+  { label:'bookmark' },
+  { label:'category', path:'categories', method:'GET', params:{ depth:1, category1:80, category2:1, category3:8 }, headers:{} },
+  { label:'abuse', path:'report', method:'POST', params:{ reason:'욕설', target_type:'place', target_id:'{{placeId}}' }, headers:{ imintoken:'' } },
+  //
+  { label:'tag' },
+  { label:'add tag', path:'users/tags', method:'POST', params:{ tag:'' }, headers:{ imintoken:'' }},
+  { label:'get tag list', path:'users/tags', method:'GET', params:{ }, headers:{ imintoken:'' }},
+  //
+  { label: '-----end-----' }
+];
+
+var resourcesTemplate = _.template($('#resourcesTemplate').html(), null, {variable:'model'});
+var paramsTemplate = _.template($('#paramsTemplate').html(), null, {variable:'model'});
+var headersTemplate = _.template($('#paramsTemplate').html(), null, {variable:'model'});
+
+$('#resourcesPlaceholder').html(resourcesTemplate(RESOURCES));
+
+$('.removeParamBtn').live('click', function (evt) {
+  $(this).parent().remove();
+});
+
+$('.addParamBtn').live('click', function (evt) {
+  $(this).parent().parent().append($(this).parent().clone());
+});
+
+$('#resourcesPlaceholder .resourceItem').each(function (index, node) {
+  var id = $(node).data('id'),
+      resource = RESOURCES[id];
+  $(node).click(function (evt) {
+    $('#requestTab a').tab('show');
+    $('#methodSelect').val(resource.method);
+    $('#urlText').val(RESOURCE_BASE + resource.path);
+    $('#requestParamsPlaceholder').html(paramsTemplate(resource.params||{}));
+    $('#requestHeadersPlaceholder').html(headersTemplate(resource.headers||{}));
+  });
+});
+
+function collectParams(baseNode) {
+  var result = {};
+  $('.paramName', baseNode).each(function(i, paramNameNode) {
+    var paramName = $(paramNameNode).val(),
+        paramValue = $(paramNameNode).next('.paramValue').val();
+    if (paramName) { result[paramName] = paramValue; }
+  });
+  return result;
+}
+
+$('#goBtn').click(function (evt) {
+  var url = $('#urlText').val(),
+      method = $('#methodSelect').val(),
+      data = collectParams($('#requestParamsPlaceholder')),
+      headers = collectParams($('#requestHeadersPlaceholder'));
+  console.log(url, method, data, headers);
+  $('#responseTab a').tab('show');
+  $.ajax({
+    type: method,
+    url: url,
+    data: data,
+    dataType: 'json',
+    beforeSend: function (xhr, settings) {
+      $.each(headers, function(k, v) {
+        xhr.setRequestHeader(k, v);
+      });
+    }
+  })
+  .complete(function (xhr, status) {
+    console.log('ajax complete:', status);
+    console.dir(arguments);
+    if (xhr.readyState === 4) {
+      $('#responseStatusPlaceholder').html(xhr.status + ' ' + xhr.statusText);
+      try {
+        $('#responseBodyPlaceholder').html(beautifyjson(JSON.parse(xhr.responseText)));
+      } catch (e) {
+        $('#responseBodyPlaceholder').html(xhr.responseText);
+      }
+      $('#responseHeadersPlaceholder').html(xhr.getAllResponseHeaders());
+    }
+  })
+  .done(function (data, status, xhr) {
+    console.log('ajax done:', status);
+    console.dir(arguments);
+  })
+  .fail(function (xhr, status, err) {
+    console.log('ajax fail:', status);
+    console.dir(arguments);
+    $('#responseStatusPlaceholder').html(err);
+  });
+});
+  </script>
+</body>
+</html>
+
